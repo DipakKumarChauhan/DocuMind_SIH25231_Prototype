@@ -1,0 +1,4 @@
+LLM model also available is llama-3.3-70b-versatile
+
+
+uvicorn app.main:app --reload

@@ -1,0 +1,17 @@
+# Web Framework
+fastapi==0.110.0
+uvicorn[standard]==0.29.0
+
+# Environment & Config
+python-dotenv==1.0.1
+
+# LLM & AI
+groq==1.0.0
+
+# Database & Vector Store
+qdrant-client==1.8.0
+
+# File Processing & Document Handling
+python-multipart==0.0.6
+pymupdf==1.24.1
+python-docx==0.8.11
