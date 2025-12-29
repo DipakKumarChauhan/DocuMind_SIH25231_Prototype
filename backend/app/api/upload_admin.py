@@ -5,7 +5,15 @@ from app.ingestion.text_ingest import extract_raw_text
 
 ###################### Import Preprocessing Functions ######################
 from app.preprocessing.text_preprocess import preprocess_text
+from app.chunking.text_chunker import build_chunks 
 
+####################### Debugging Helper Function ######################
+# Only un commnet if using for debugging in below calling before return statement.
+
+# import re
+
+# def extract_pages_from_text(text: str):
+#     return sorted(set(int(p) for p in re.findall(r"\[PAGE (\d+)\]", text)))
 
 
 route = APIRouter(prefix='/api',tags=["Admin Upload"])
@@ -27,11 +35,39 @@ def upload_document(file:UploadFile=File(...)):
 
         if not raw_text.strip():
             raise HTTPException(status_code= 400, detail= "No readable text found in document")
+        
         preprocessed_text = preprocess_text(raw_text)
+        
+        ############## Debugging Info ################
+
+        # print("=== PREPROCESSED TEXT START ===")
+        # print(preprocessed_text[:1000])
+        # print("=== PREPROCESSED TEXT END ===")
+        
+        chunks = build_chunks(file.filename, preprocessed_text)
+        
+        ############## Debuging Info ################
+    #     pages_covered = set()
+    #     for ch in chunks:
+    #         pages_covered.update(extract_pages_from_text(ch["text"]))
+
+    #     return {
+    # "status": "success",
+    # "filename": file.filename,
+    # "total_chunks": len(chunks),
+    # "pages_covered": sorted(pages_covered),
+    # "sample_chunk": chunks[22] if chunks else None
+    #           }    
+
         return {
             "status": "success",
             "filename": file.filename,
-            "text_preview": preprocessed_text[:100000]
+            "total_chunks": len(chunks),
+            "pages_in_chunks": list(
+        sorted(set(ch["metadata"]["page"] for ch in chunks))
+    ),
+            "sample_chunk": chunks[0] if chunks else None,
+            #"text_preview": preprocessed_text[:100000]
         }
         
     
