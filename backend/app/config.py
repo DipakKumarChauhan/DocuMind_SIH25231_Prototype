@@ -12,6 +12,11 @@ class Settings:
     JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
     JWT_ACCESS_TOKEN_EXPIRE_DAYS: int = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_DAYS", "7"))
     GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID")
+    GOOGLE_CLIENT_SECRET: str = os.getenv("GOOGLE_CLIENT_SECRET")
+    HF_API_TOKEN: str = os.getenv("HF_API_TOKEN")
+    HF_EMBEDDING_MODEL: str = os.getenv("HF_EMBEDDING_MODEL")
+    HF_API_URL_BGE: str = os.getenv("HF_API_URL_BGE")
+    
     class Config:
         env_file = ".env"
         case_sensitive = True

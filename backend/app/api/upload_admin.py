@@ -13,6 +13,14 @@ from app.auth.models import User
 from app.preprocessing.text_preprocess import preprocess_text
 from app.chunking.text_chunker import build_chunks 
 
+########################### Import  HF BGE Embedder ##########################
+
+from app.embeddings.hf_bge_m3 import HFBgeM3Embedder
+from app.ingestion.text_indexer import index_text_chunks
+
+embedder = HFBgeM3Embedder()
+
+
 ####################### Debugging Helper Function ######################
 # Only un commnet if using for debugging in below calling before return statement.
 
@@ -61,7 +69,7 @@ def upload_document(
             owner_id = current_user.id ####### New Change ########
 
             )
-        
+        inserted = index_text_chunks(chunks, embedder)
         ############## Debuging Info ################
     #     pages_covered = set()
     #     for ch in chunks:
@@ -79,6 +87,7 @@ def upload_document(
             "status": "success",
             "filename": file.filename,
             "total_chunks": len(chunks),
+            "vectors_inserted": inserted,
             "pages_in_chunks": list(
         sorted(set(ch["metadata"]["page"] for ch in chunks))
     ),

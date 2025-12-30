@@ -2,6 +2,7 @@ import re
 from typing import Dict, List
 import tiktoken
 import hashlib
+import uuid
 
 #PAGE_PATTERN =  re.compile(r"\[\PAGE (\d+)\]") # Too Rigid Regex Pattern
 PAGE_PATTERN = re.compile(r"\[\s*PAGE\s+(\d+)\s*\]", re.IGNORECASE)
@@ -162,7 +163,9 @@ def generate_chunk_id(
 
 
 
-    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+#    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+    # Deterministic UUIDv5 so Qdrant accepts it as a valid ID
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, raw))
 
 
 

@@ -4,7 +4,7 @@
 from fastapi import FastAPI
 from app.config import settings
 from app.middleware.cors import setup_cors
-from app.db.collections import create_collections
+from app.db.qdrant_collections import create_collections
 from app.db.qdrant_client import get_qdrant_client
 from app.rag.groq_client import generate_completion, LLMServiceError
 
@@ -15,6 +15,9 @@ from app.db.session import engine
 from app.db.base import Base
 from app.auth.models import User
 from app.auth.routes import router as auth_router
+
+#from app.db.qdrant_setup import setup_qdrant_collections ## New Change
+
 
 Base.metadata.create_all(bind=engine)
 
