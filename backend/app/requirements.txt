@@ -5,6 +5,13 @@ uvicorn[standard]==0.29.0
 # Environment & Config
 python-dotenv==1.0.1
 
+# Authentication & Security
+python-jose==3.3.0
+google-auth==2.28.0
+
+# Database ORM
+sqlalchemy==2.0.27
+
 # LLM & AI
 groq==1.0.0
 

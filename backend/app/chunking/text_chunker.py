@@ -23,7 +23,8 @@ def split_by_page(text:str) -> Dict[int, str]:
 
     for line in text.splitlines(): # text ko line-by-line padho
 
-        match = PAGE_PATTERN.match(line.strip()) # check karo: kya yeh line [PAGE X] hai?
+      #  match = PAGE_PATTERN.match(line.strip()) # check karo: kya yeh line [PAGE X] hai? # this line was giving bug if there is leading spaces
+        match = PAGE_PATTERN.search(line) # check karo: kya yeh line [PAGE
 
         if match: # Agar yeh ek naya page marker hai
 
@@ -40,7 +41,7 @@ def split_by_page(text:str) -> Dict[int, str]:
                 # Ab new page start ho gaya.
                 # Regex se page number nikaalo: match.group(1) -> "5" like string
 
-                current_page = int(match.group(1))
+            current_page = int(match.group(1))
         else:
 
             # Agar line page marker nahi hai,
@@ -145,15 +146,22 @@ def chunk_document(
 ############################## Generate Unique Chunk ID ###########################
 
 def generate_chunk_id(
+        owner_id:str, # New Change
         filename:str,
         page:int,
-        chunk_index:int
+        chunk_index:int,
+       
 )->str :
     # filename + page + chunk_index ko combine karke
 # deterministic (repeatable) unique ID bana rahe hain.
 # SHA-256 use karne se: same chunk -> same ID, aur collisions bohot rare hote hain.
 
-    raw = f"{filename}: {page}: {chunk_index}"
+    #raw = f"{filename}: {page}: {chunk_index}" # Old Format
+
+    raw = f"{owner_id}:{filename}:{page}:{chunk_index}" # New Format with owner_id
+
+
+
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
@@ -167,22 +175,26 @@ def generate_chunk_id(
 # Final call Function. 
 
 def build_chunks(
+        owner_id:str, # New Change
         filename:str,
-        prerocessd_text:str,
+        preprocessed_text:str,
+        
 )-> List[Dict]:
-    chunks  = chunk_document(prerocessd_text) # pura document chunks me tod do and chunks is a list of dicts
+    chunks  = chunk_document(preprocessed_text) # pura document chunks me tod do and chunks is a list of dicts
 
     final_chunks = []
 
     for ch in chunks:
         final_chunks.append({
             "id": generate_chunk_id(
+                owner_id= owner_id, # New Change
                 filename= filename,
                 page= ch["page"],
                 chunk_index= ch["chunk_index"]
             ),
             "text": ch["text"],
             "metadata":{
+                "owner_id": owner_id, # New Change
                 "filename": filename,
                 "page": ch["page"],
                 "chunk_index": ch["chunk_index"],

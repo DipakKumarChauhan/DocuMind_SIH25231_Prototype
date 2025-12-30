@@ -1,7 +1,13 @@
-from fastapi import APIRouter,UploadFile,File,HTTPException
+from fastapi import APIRouter,UploadFile,File,HTTPException,Depends
+
 from pathlib import Path
 from app.utils.file_utils import save_temp_file, cleanup_temp_file
 from app.ingestion.text_ingest import extract_raw_text
+
+
+###################### Import Auth Dependencies ######################
+from app.auth.dependencies  import get_current_user # New Change
+from app.auth.models import User
 
 ###################### Import Preprocessing Functions ######################
 from app.preprocessing.text_preprocess import preprocess_text
@@ -21,7 +27,11 @@ route = APIRouter(prefix='/api',tags=["Admin Upload"])
 ALLOWED_EXTENSIONS = {".pdf",".docx",}
 
 @route.post("/upload-admin")
-def upload_document(file:UploadFile=File(...)):
+def upload_document(
+    file:UploadFile=File(...), 
+    current_user: User = Depends(get_current_user) # New Change
+    ):
+
     suffix = Path(file.filename).suffix.lower()
 
     if suffix not in ALLOWED_EXTENSIONS:
@@ -44,7 +54,13 @@ def upload_document(file:UploadFile=File(...)):
         # print(preprocessed_text[:1000])
         # print("=== PREPROCESSED TEXT END ===")
         
-        chunks = build_chunks(file.filename, preprocessed_text)
+        chunks = build_chunks(
+            filename=file.filename, 
+            preprocessed_text=preprocessed_text,
+
+            owner_id = current_user.id ####### New Change ########
+
+            )
         
         ############## Debuging Info ################
     #     pages_covered = set()

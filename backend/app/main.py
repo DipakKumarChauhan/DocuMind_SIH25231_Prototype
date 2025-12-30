@@ -11,7 +11,12 @@ from app.rag.groq_client import generate_completion, LLMServiceError
 ################## Importing API routers ##################
 from app.api.upload_admin import route as upload_router
 
+from app.db.session import engine
+from app.db.base import Base
+from app.auth.models import User
+from app.auth.routes import router as auth_router
 
+Base.metadata.create_all(bind=engine)
 
 
 app = FastAPI(
@@ -24,6 +29,7 @@ setup_cors(app)
 
 # Registering API routers 
 app.include_router(upload_router)
+app.include_router(auth_router)
 
 @app.on_event("startup")
 def startup_event():
