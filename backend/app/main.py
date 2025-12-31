@@ -10,6 +10,8 @@ from app.rag.groq_client import generate_completion, LLMServiceError
 
 ################## Importing API routers ##################
 from app.api.upload_admin import route as upload_router
+from app.api.search import router as search_router
+from app.api.admin_tfidf import router as admin_tfidf_router
 
 from app.db.session import engine
 from app.db.base import Base
@@ -33,6 +35,10 @@ setup_cors(app)
 # Registering API routers 
 app.include_router(upload_router)
 app.include_router(auth_router)
+app.include_router(search_router)
+app.include_router(admin_tfidf_router)
+
+#################### Startup Event ####################
 
 @app.on_event("startup")
 def startup_event():

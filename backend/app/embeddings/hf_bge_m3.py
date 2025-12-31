@@ -115,8 +115,20 @@ class HFBgeM3Embedder(EmbeddingModel):
 
     def embed_query(self, text: str) -> List[float]:
         vec = self._call(text)
-        vec = vec[0] if isinstance(vec, list) else vec
-        return self._normalize([vec])[0]
+        # Ensure vec is a list of embeddings (List[List[float]])
+        if isinstance(vec, list) and len(vec) > 0:
+            # If vec is a 2D list, it's already correct format
+            if isinstance(vec[0], list):
+                embeddings = vec
+            # If vec is a 1D list (single embedding), wrap it
+            else:
+                embeddings = [vec]
+        else:
+            # Fallback if response format is unexpected
+            embeddings = [[vec]] if not isinstance(vec, list) else [vec]
+        
+        normalized = self._normalize(embeddings)
+        return normalized[0]
 
     def dimension(self) -> int:
         # bge-m3 is 1024 dimensional
@@ -128,7 +140,12 @@ class HFBgeM3Embedder(EmbeddingModel):
 
         normed = []
         for v in vectors:
-            s = math.sqrt(sum(x * x for x in v)) or 1.0
-            normed.append([x / s for x in v])
+            # Ensure v is iterable and contains numbers
+            if isinstance(v, (list, tuple)):
+                s = math.sqrt(sum(x * x for x in v)) or 1.0
+                normed.append([x / s for x in v])
+            else:
+                # Fallback for single float values
+                normed.append([1.0])
         return normed
 

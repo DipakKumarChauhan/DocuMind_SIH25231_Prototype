@@ -16,7 +16,7 @@ sqlalchemy==2.0.27
 groq==1.0.0
 
 # Database & Vector Store
-qdrant-client==1.8.0
+qdrant-client>=1.8.2
 
 # File Processing & Document Handling
 python-multipart==0.0.6
@@ -24,3 +24,6 @@ pymupdf==1.24.1
 python-docx==0.8.11
 
 tiktoken==0.8.0
+
+# ML Frameworks
+scikit-learn==1.4.2
