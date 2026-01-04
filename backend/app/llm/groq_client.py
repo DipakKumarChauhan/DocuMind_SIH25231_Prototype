@@ -27,10 +27,8 @@ def generate_completion(
         response = _client.chat.completions.create(
             model=model,
             messages=[
-                {
-                    "role":"user",
-                    "content": prompt
-                }
+                {"role": "system", "content": "You are a helpful AI assistant."},
+                {"role": "user", "content": prompt}
             ],
             temperature=temperature,
             max_tokens=max_token,

@@ -6,7 +6,7 @@ from app.config import settings
 from app.middleware.cors import setup_cors
 from app.db.qdrant_collections import create_collections
 from app.db.qdrant_client import get_qdrant_client
-from app.rag.groq_client import generate_completion, LLMServiceError
+from app.llm.groq_client import generate_completion, LLMServiceError
 
 ################## Importing API routers ##################
 from app.api.upload_admin import route as upload_router
