@@ -12,11 +12,13 @@ from app.llm.groq_client import generate_completion, LLMServiceError
 from app.api.upload_admin import route as upload_router
 from app.api.search import router as search_router
 from app.api.admin_tfidf import router as admin_tfidf_router
+from app.api.upload_image import router as upload_router
 
 from app.db.session import engine
 from app.db.base import Base
 from app.auth.models import User
 from app.auth.routes import router as auth_router
+
 
 #from app.db.qdrant_setup import setup_qdrant_collections ## New Change
 
@@ -37,6 +39,7 @@ app.include_router(upload_router)
 app.include_router(auth_router)
 app.include_router(search_router)
 app.include_router(admin_tfidf_router)
+app.include_router(upload_router)
 
 #################### Startup Event ####################
 

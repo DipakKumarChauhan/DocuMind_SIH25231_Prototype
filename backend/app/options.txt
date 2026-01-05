@@ -2,3 +2,5 @@ LLM model also available is llama-3.3-70b-versatile
 
 
 uvicorn app.main:app --reload
+
+export GOOGLE_APPLICATION_CREDENTIALS=/home/dipak/SIH-25321_MVP/backend/app/json_Keys/sih-25231-c11f191d6607.json

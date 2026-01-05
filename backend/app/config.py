@@ -16,7 +16,11 @@ class Settings:
     HF_API_TOKEN: str = os.getenv("HF_API_TOKEN")
     HF_EMBEDDING_MODEL: str = os.getenv("HF_EMBEDDING_MODEL")
     HF_API_URL_BGE: str = os.getenv("HF_API_URL_BGE")
-    
+    CLOUDINARY_CLOUD_NAME: str = os.getenv("CLOUDINARY_CLOUD_NAME")
+    CLOUDINARY_API_KEY: str = os.getenv("CLOUDINARY_API_KEY")
+    CLOUDINARY_API_SECRET: str = os.getenv("CLOUDINARY_API_SECRET")
+    GOOGLE_APPLICATION_CREDENTIALS: str = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+
     class Config:
         env_file = ".env"
         case_sensitive = True
