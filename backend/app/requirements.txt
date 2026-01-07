@@ -33,9 +33,18 @@ tiktoken==0.8.0
 # ML Frameworks
 scikit-learn==1.4.2
 
+# Pin NumPy to <2 to avoid ABI issues with compiled wheels (PyTorch, scikit-learn)
+numpy<2
+
 # Cloudinary for media management
 cloudinary==1.41.0
 
 
 #GOOGLE Vision
 google-cloud-vision==3.4.4
+
+
+# Transformers & ML
+transformers==4.36.2
+torch==2.1.2
+Pillow==10.1.0

@@ -20,6 +20,12 @@ class Settings:
     CLOUDINARY_API_KEY: str = os.getenv("CLOUDINARY_API_KEY")
     CLOUDINARY_API_SECRET: str = os.getenv("CLOUDINARY_API_SECRET")
     GOOGLE_APPLICATION_CREDENTIALS: str = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    # Local path to a pre-downloaded CLIP model folder (optional)
+    CLIP_MODEL_PATH: str | None = os.getenv("CLIP_MODEL_PATH")
+
+    IMAGE_EMBEDDING_MODE: str = "auto"
+    IMAGE_EMBEDDING_API_URL: str = os.getenv("IMAGE_EMBEDDING_API_URL")
+    IMAGE_EMBEDDING_API_KEY: str = os.getenv("IMAGE_EMBEDDING_API_KEY")
 
     class Config:
         env_file = ".env"

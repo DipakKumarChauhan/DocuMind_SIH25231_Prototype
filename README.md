@@ -11,6 +11,8 @@ cp backend/.env.example backend/.env
 # QDRANT_API_KEY=...
 # GROQ_API_KEY=...
 # ENV=development
+# (Optional) CLIP_MODEL_PATH=/absolute/path/to/clip-vit-base-patch32  # avoids network
+# IMAGE_EMBEDDING_MODE=auto  # auto|remote|local|ocr
 ```
 
 2. Ensure local files are ignored by Git (already configured):

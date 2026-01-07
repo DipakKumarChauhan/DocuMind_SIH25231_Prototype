@@ -139,6 +139,7 @@ backend/Test_code/image_ocr_test_codes/python_REPL_code.txt
 *.env
 .env.local
 .env.*.local
+model_cache/
 
 # Node modules (if applicable)
 node_modules/
