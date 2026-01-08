@@ -13,6 +13,7 @@ from app.api.upload_admin import route as upload_router
 from app.api.search import router as search_router
 from app.api.admin_tfidf import router as admin_tfidf_router
 from app.api.upload_image import router as upload_router
+from app.api.search_image import router as search_image_router
 
 from app.db.session import engine
 from app.db.base import Base
@@ -40,6 +41,8 @@ app.include_router(auth_router)
 app.include_router(search_router)
 app.include_router(admin_tfidf_router)
 app.include_router(upload_router)
+app.include_router(search_image_router)
+# app.include_router(search_image_router)
 
 #################### Startup Event ####################
 

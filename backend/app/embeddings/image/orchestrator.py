@@ -19,7 +19,8 @@ def embed_image(image_url: str) -> dict:
     {
       vector: List[float],
       source: "remote" | "local" | "ocr" | "ocr_fallback",
-      ocr_text: str | None
+      ocr_text: str | None,
+      ocr_blocks: list[dict] | None
     }
     """
 
@@ -30,16 +31,22 @@ def embed_image(image_url: str) -> dict:
     # compute an embedding purely from OCR-extracted text. This avoids any
     # model downloads and can be useful in constrained environments.
     if mode == "ocr":
-        ocr_text = extract_text_from_image(image_url)
-        text_content = " ".join([block.get("text", "") for block in ocr_text if isinstance(block, dict)])
+        ocr_blocks = extract_text_from_image(image_url)  # list of {text, bounding_box}
+        text_content = " ".join([block.get("text", "") for block in ocr_blocks if isinstance(block, dict)])
         text_embedder = _get_text_embedder()
         vec = text_embedder.embed_query(text_content)
         return {
             "vector": vec,
             "source": "ocr",
             "ocr_text": text_content,
+            "ocr_blocks": ocr_blocks,
         }
     # ===== END ADDED =====
+
+    # Extract OCR once and reuse for all branches to avoid repeated calls
+    # This provides searchable text alongside visual embeddings
+    ocr_blocks = extract_text_from_image(image_url)  # list of {text, bounding_box}
+    ocr_text = " ".join([block.get("text", "") for block in ocr_blocks if isinstance(block, dict)])
 
     # ---------- REMOTE ----------
     if mode in ("auto", "remote"):
@@ -49,7 +56,8 @@ def embed_image(image_url: str) -> dict:
                 return {
                     "vector": vec,
                     "source": "remote",
-                    "ocr_text": None,
+                    "ocr_text": ocr_text or None,
+                    "ocr_blocks": ocr_blocks or None,
                 }
         except Exception:
             if mode == "remote":
@@ -62,16 +70,16 @@ def embed_image(image_url: str) -> dict:
             return {
                 "vector": vec,
                 "source": "local",
-                "ocr_text": None,
+                "ocr_text": ocr_text or None,
+                "ocr_blocks": ocr_blocks or None,
             }
         except Exception:
             if mode == "local":
                 raise
 
     # ---------- OCR FALLBACK ----------
-    ocr_text = extract_text_from_image(image_url)
-    # Extract just the text from OCR blocks
-    text_content = " ".join([block.get("text", "") for block in ocr_text if isinstance(block, dict)])
+    # Use precomputed OCR text for fallback to avoid additional OCR calls
+    text_content = ocr_text
     
     text_embedder = _get_text_embedder()
     vec = text_embedder.embed_query(text_content)
@@ -80,4 +88,5 @@ def embed_image(image_url: str) -> dict:
         "vector": vec,
         "source": "ocr_fallback",
         "ocr_text": text_content,
+        "ocr_blocks": ocr_blocks or None,
     }

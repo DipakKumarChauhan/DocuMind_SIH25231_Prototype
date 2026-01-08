@@ -1,0 +1,36 @@
+
+Test To check if embedding for already stored image in cloudinary is generated or not
+
+from app.embeddings.image.orchestrator import embed_image
+
+image_url = "https://res.cloudinary.com/du3jktmzs/image/upload/v1767589438/sih/images/1584bf98-0ebb-4bff-b0ad-3d09f2f8043c/806e4984-ba7a-4e0e-ba99-9777aaa86225.png"
+
+
+res = embed_image(image_url)
+print(res["source"])       # local
+print(len(res["vector"]))  # 512
+
+Test to check it embeddings are stored in qdrant or not
+
+from app.ingestion.image_indexer import index_image
+
+index_image(
+    image_url = "https://res.cloudinary.com/du3jktmzs/image/upload/v1767589438/sih/images/1584bf98-0ebb-4bff-b0ad-3d09f2f8043c/806e4984-ba7a-4e0e-ba99-9777aaa86225.png",
+    owner_id="1584bf98-0ebb-4bff-b0ad-3d09f2f8043c",
+    file_id="806e4984-ba7a-4e0e-ba99-9777aaa86225"
+)
+
+from app.db.qdrant_client import get_qdrant_client
+
+client = get_qdrant_client()
+points, _ = client.scroll(
+    collection_name="image_collection",
+    limit=1,
+    with_vectors=True,
+    with_payload=True
+)
+
+print(points[0].vector.keys())      # {'image'}
+print(points[0].payload.keys())     # image_url, ocr_text, owner_id...
+
+

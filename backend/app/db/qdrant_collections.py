@@ -2,7 +2,7 @@ from qdrant_client.models import VectorParams, Distance, PayloadSchemaType, Spar
 from app.db.qdrant_client import get_qdrant_client
 
 TEXT_VECTOR_SIZE = 1024 # example: BGE-base vector size
-IMAGE_VECTOR_SIZE = 768 # example: CLIP 
+IMAGE_VECTOR_SIZE = 512 # example:CLIP vit-base-patch32 (confirmed in your tests)
 AUDIO_VECTOR_SIZE = 512 # example: speech embeddings vector size
 
 def create_collections():
@@ -36,19 +36,38 @@ def create_collections():
         )
     
     if "image_collection" not in existing:
+        # Named vectors to separate modalities and avoid dimension conflicts:
+        # - "image": 512-dim CLIP image/text space
+        # - "ocr":   1024-dim BGE-M3 text space (OCR-derived)
         client.create_collection(
             collection_name="image_collection",
-            vectors_config= VectorParams(
-                size = IMAGE_VECTOR_SIZE,
-                distance= Distance.COSINE,
-            ),
+            vectors_config={
+                "image": VectorParams(
+                    size=IMAGE_VECTOR_SIZE,
+                    distance=Distance.COSINE,
+                ),
+                "ocr": VectorParams(
+                    size=TEXT_VECTOR_SIZE,
+                    distance=Distance.COSINE,
+                ),
+            },
+        )
+        # Create payload index for owner_id to support filtering
+        client.create_payload_index(
+            collection_name="image_collection",
+            field_name="owner_id",
+            field_schema=PayloadSchemaType.KEYWORD,
         )
     if "audio_collection" not in existing:
-
         client.create_collection(
             collection_name="audio_collection",
-            vectors_config= VectorParams(
-                size = AUDIO_VECTOR_SIZE,
-                distance= Distance.COSINE,
+            vectors_config=VectorParams(
+                size=AUDIO_VECTOR_SIZE,
+                distance=Distance.COSINE,
             ),
+        )
+        client.create_payload_index(
+            collection_name="audio_collection",
+            field_name="owner_id",
+            field_schema=PayloadSchemaType.KEYWORD,
         )

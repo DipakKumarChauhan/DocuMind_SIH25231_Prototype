@@ -21,3 +21,18 @@ def upload_image(file_bytes:bytes,public_id:str) ->dict:
       resource_type= "image"
    )
    return result
+
+
+########### TO Upload Temp Image #############
+def upload_temp_image(file_bytes: bytes, filename: str) -> str:
+    """
+    Uploads image to Cloudinary as TEMP file.
+    Returns secure URL.
+    """
+    res = cloudinary.uploader.upload(
+        file_bytes,
+        public_id=f"temp/chat/{filename}",
+        resource_type="image",
+        overwrite=True,
+    )
+    return res["secure_url"]

@@ -3,6 +3,7 @@ from pathlib import Path
 from uuid import uuid4
 from app.utils.cloudinary import upload_image
 from app.auth.dependencies  import get_current_user 
+from app.ingestion.image_indexer import index_image
 router = APIRouter(prefix="/api/upload",tags=["upload"])
 
 ALLOWED_IMAGE_TYPES = ["image/jpeg","image/png","image/gif","image/webp"]
@@ -25,6 +26,17 @@ async def upload_image_api(
         file_bytes=file_bytes,
         public_id=public_id,
         )
+    image_url = cloudinary_result["secure_url"]
+    file_id = cloudinary_result["public_id"]
+    
+    try:
+        index_image(
+        image_url=image_url,
+        owner_id=current_user.id,
+        file_id=file_id,
+    )
+    except Exception as e:
+        raise HTTPException(status_code=500,detail="Failed to index image")
     return {
         "file_id": file_id,
         "image_url": cloudinary_result["secure_url"],

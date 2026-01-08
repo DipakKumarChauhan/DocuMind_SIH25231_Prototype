@@ -136,6 +136,7 @@ backend/app/venv/
 backend/app/json_Keys/sih-25231-c11f191d6607.json
 backend/app/options.txt
 backend/Test_code/image_ocr_test_codes/python_REPL_code.txt
+changes.md
 *.env
 .env.local
 .env.*.local
