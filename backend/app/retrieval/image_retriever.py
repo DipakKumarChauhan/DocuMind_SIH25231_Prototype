@@ -35,7 +35,7 @@ def retrieve_images_from_text(
         query = dense_vec,
         using = "image",
         query_filter = owner_filter,
-        limit = top_k,
+        limit = top_k * 2,  # Get more candidates for filtering
         with_payload = True,
         with_vectors = False,
     )
@@ -51,7 +51,20 @@ def retrieve_images_from_text(
             "bbox": p.payload.get("bbox"), # bbox is optional so we used .get() method and if there is no bbox it will return None
         })
 
-    return hits
+    # Filter by threshold - CLIP scores are naturally lower for cross-modal search
+    # Adaptive threshold based on query length (longer queries = lower scores expected)
+    query_words = len(query.split())
+    if query_words <= 3:
+        MIN_SCORE = 0.20  # Short queries
+    elif query_words <= 8:
+        MIN_SCORE = 0.18  # Medium queries
+    else:
+        MIN_SCORE = 0.15  # Long queries (like your 15-word example)
+    
+    filtered = [h for h in hits if h["score"] >= MIN_SCORE]
+    
+    # Return filtered results up to top_k, or all hits if nothing passes threshold
+    return (filtered or hits)[:top_k]
 
 def retrieve_image_from_image(
         image_url:str,

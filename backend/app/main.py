@@ -9,12 +9,15 @@ from app.db.qdrant_client import get_qdrant_client
 from app.llm.groq_client import generate_completion, LLMServiceError
 
 ################## Importing API routers ##################
-from app.api.upload_admin import route as upload_router
+from app.api.upload_admin import route as upload_admin_router
 from app.api.search import router as search_router
 from app.api.admin_tfidf import router as admin_tfidf_router
-from app.api.upload_image import router as upload_router
+from app.api.upload_image import router as upload_image_router
 from app.api.search_image import router as search_image_router
+from app.api.upload_audio import router as upload_audio_router
+from app.api.search_audio import router as search_audio_router
 
+########################################################
 from app.db.session import engine
 from app.db.base import Base
 from app.auth.models import User
@@ -36,12 +39,14 @@ app = FastAPI(
 setup_cors(app)
 
 # Registering API routers 
-app.include_router(upload_router)
+app.include_router(upload_admin_router)
 app.include_router(auth_router)
 app.include_router(search_router)
 app.include_router(admin_tfidf_router)
-app.include_router(upload_router)
+app.include_router(upload_image_router)
 app.include_router(search_image_router)
+app.include_router(upload_audio_router)
+app.include_router(search_audio_router)
 # app.include_router(search_image_router)
 
 #################### Startup Event ####################

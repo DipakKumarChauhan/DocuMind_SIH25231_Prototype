@@ -3,7 +3,7 @@ from app.db.qdrant_client import get_qdrant_client
 
 TEXT_VECTOR_SIZE = 1024 # example: BGE-base vector size
 IMAGE_VECTOR_SIZE = 512 # example:CLIP vit-base-patch32 (confirmed in your tests)
-AUDIO_VECTOR_SIZE = 512 # example: speech embeddings vector size
+AUDIO_VECTOR_SIZE = 1024 #512 # example: speech embeddings vector size
 
 def create_collections():
     client = get_qdrant_client()
@@ -61,10 +61,11 @@ def create_collections():
     if "audio_collection" not in existing:
         client.create_collection(
             collection_name="audio_collection",
-            vectors_config=VectorParams(
+            vectors_config={
+                "transcript": VectorParams(
                 size=AUDIO_VECTOR_SIZE,
                 distance=Distance.COSINE,
-            ),
+            )},
         )
         client.create_payload_index(
             collection_name="audio_collection",

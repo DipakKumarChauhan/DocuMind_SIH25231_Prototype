@@ -22,6 +22,12 @@ class Settings:
     GOOGLE_APPLICATION_CREDENTIALS: str = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
     # Local path to a pre-downloaded CLIP model folder (optional)
     CLIP_MODEL_PATH: str | None = os.getenv("CLIP_MODEL_PATH")
+    # Central model cache directory (where all models are stored and reused)
+    MODEL_CACHE_DIR: str = os.getenv("MODEL_CACHE_DIR", "/home/dipak/SIH-25321_MVP/model_cache")
+    ASR_MODE = "auto" # Options: auto | remote | local
+    
+    ASR_REMOTE_API_URL: str = os.getenv("ASR_REMOTE_API_URL")
+    ASR_REMOTE_API_KEY: str = os.getenv("ASR_REMOTE_API_KEY")
 
     IMAGE_EMBEDDING_MODE: str = "auto"
     IMAGE_EMBEDDING_API_URL: str = os.getenv("IMAGE_EMBEDDING_API_URL")
@@ -31,4 +37,19 @@ class Settings:
         env_file = ".env"
         case_sensitive = True
 
-settings = Settings()
+settings = Settings()   
+
+# Ensure cache directory exists and configure libraries to use it
+try:
+    os.makedirs(settings.MODEL_CACHE_DIR, exist_ok=True)
+except Exception:
+    # If directory creation fails, continue; individual loaders may handle their own paths
+    pass
+
+# Configure Hugging Face caches to use the central cache directory
+os.environ.setdefault("TRANSFORMERS_CACHE", settings.MODEL_CACHE_DIR)
+os.environ.setdefault("HF_HOME", settings.MODEL_CACHE_DIR)
+os.environ.setdefault("HF_HUB_CACHE", settings.MODEL_CACHE_DIR)
+
+# Some libraries respect XDG cache; set it as well
+os.environ.setdefault("XDG_CACHE_HOME", settings.MODEL_CACHE_DIR)

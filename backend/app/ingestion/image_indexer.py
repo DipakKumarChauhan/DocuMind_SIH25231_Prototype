@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from qdrant_client.models import PointStruct
 from app.db.qdrant_client import get_qdrant_client
-# from app.db.qdrant_collections import 
+from app.embeddings.hf_bge_m3 import HFBgeM3Embedder
 from app.embeddings.image.orchestrator import embed_image
 
 IMAGE_COLLECTION = "image_collection"
@@ -14,7 +14,7 @@ def index_image(
         bbox:list | None = None,
 ):
     """
-    Index a single image into Qdrant.
+    Index a single image into Qdrant with both image and OCR text vectors.
     """
 
     client = get_qdrant_client()
@@ -32,14 +32,26 @@ def index_image(
     if not ocr_blocks:
         ocr_blocks = None
 
-    # Route vectors to correct named space
+    # Always store both vectors for maximum search flexibility
     vectors = {}
+    
     if source in ("local", "remote"):
+        # CLIP image vector (512-dim)
         vectors["image"] = vector
+        # Also embed OCR text for text-based search (1024-dim)
+        if ocr_text:
+            text_embedder = HFBgeM3Embedder()
+            vectors["ocr"] = text_embedder.embed_query(ocr_text)
     elif source in ("ocr", "ocr_fallback"):
+        # OCR text vector only (1024-dim)
         vectors["ocr"] = vector
+        # No image vector available in this mode
     else:
+        # Default: image vector
         vectors["image"] = vector
+        if ocr_text:
+            text_embedder = HFBgeM3Embedder()
+            vectors["ocr"] = text_embedder.embed_query(ocr_text)
 
     point = PointStruct(
         id=str(uuid.uuid4()),

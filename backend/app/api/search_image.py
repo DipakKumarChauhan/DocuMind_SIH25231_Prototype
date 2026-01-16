@@ -4,6 +4,7 @@ from app.auth.dependencies import get_current_user
 from app.retrieval.image_retriever import retrieve_images_from_text
 from app.retrieval.image_to_image_retriever import retrieve_similar_images
 from app.retrieval.image_to_text_retriever import retrieve_text_from_image
+from app.retrieval.image_to_audio_retriever import retrieve_audio_from_image
 from app.utils.cloudinary import upload_temp_image
 
 router = APIRouter(prefix = "/api/search/image", tags = ["Image Search"])
@@ -86,6 +87,32 @@ async def image_to_text_search(
         "results": results,
     }
 
+@router.post("/image_to_audio_search")
+async def image_to_audio_search(
+    file: UploadFile = File(...),
+    top_k: int = Form(5),
+    user=Depends(get_current_user),
+):
+    image_url = await _validate_and_upload_image(file)
+
+    results = retrieve_audio_from_image(
+        image_url = image_url,
+        owner_id = user.id,
+        top_k = top_k,
+    )
+
+    # Filter by score threshold (consistent with audio search endpoints)
+    MIN_SCORE = 0.28
+    filtered = [r for r in results if r["score"] >= MIN_SCORE]
+
+    return {
+        "query_type": "image_to_audio",
+        "query_image": image_url,
+        "results": filtered or results,  # Fallback if all filtered out
+    }
+
+
+
 
 async def _validate_and_upload_image(file: UploadFile) -> str:
     if file.content_type not in ALLOWED_CONTENT_TYPES:
@@ -102,3 +129,4 @@ async def _validate_and_upload_image(file: UploadFile) -> str:
         file_bytes=image_bytes,
         filename=file.filename,
     )
+

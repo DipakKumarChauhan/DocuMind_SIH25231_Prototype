@@ -32,7 +32,11 @@ def embed_image(image_url: str) -> dict:
     # model downloads and can be useful in constrained environments.
     if mode == "ocr":
         ocr_blocks = extract_text_from_image(image_url)  # list of {text, bounding_box}
-        text_content = " ".join([block.get("text", "") for block in ocr_blocks if isinstance(block, dict)])
+        text_content = " ".join([
+            block.get("text", "") 
+            for block in ocr_blocks 
+            if isinstance(block, dict)])
+        
         text_embedder = _get_text_embedder()
         vec = text_embedder.embed_query(text_content)
         return {

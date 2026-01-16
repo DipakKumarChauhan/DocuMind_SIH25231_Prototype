@@ -141,6 +141,16 @@ changes.md
 .env.local
 .env.*.local
 model_cache/
+backend/AUDIO_TESTING_GUIDE.md
+backend/bug.md
+backend/desing.md
+FILES_TO_UPDATE.md
+MIGRATION_GUIDE.md
+imp.txt
+backend/=2.2.0
+backend/=2.2.2
+backend/=4.40.0
+backend/app.db
 
 # Node modules (if applicable)
 node_modules/

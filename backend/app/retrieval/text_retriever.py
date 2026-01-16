@@ -73,6 +73,9 @@ from app.embeddings.sparse.tfidf import TfidfSparseEncoder
 
 COLLECTION = "text_collection"
 
+# RRF (Reciprocal Rank Fusion) constant
+RRF_K = 60  # Standard RRF constant (higher = more weight to lower ranks)
+
 
 # -------------------------------
 # 🔍 Entity detection helper
@@ -93,6 +96,61 @@ def _normalize_score(score: Any) -> float | None:
     if isinstance(score, list):
         return max(score) if score else None
     return float(score)
+
+
+def _reciprocal_rank_fusion(
+    dense_results: List[Dict],
+    sparse_results: List[Dict],
+    k: int = RRF_K,
+) -> List[Dict]:
+    """
+    Combine dense and sparse results using Reciprocal Rank Fusion (RRF).
+    
+    RRF formula: score(doc) = sum(1 / (k + rank_i))
+    where rank_i is the rank in each result list (1-indexed)
+    
+    Args:
+        dense_results: Results from dense vector search (sorted by score)
+        sparse_results: Results from sparse vector search (sorted by score)
+        k: RRF constant (default 60, standard value)
+        
+    Returns:
+        List of results sorted by fused RRF score
+    """
+    # Build RRF scores by document ID
+    rrf_scores = {}
+    
+    # Add dense ranks (1-indexed)
+    for rank, result in enumerate(dense_results, start=1):
+        doc_id = result["id"]
+        rrf_scores[doc_id] = rrf_scores.get(doc_id, 0) + (1.0 / (k + rank))
+    
+    # Add sparse ranks (1-indexed)
+    for rank, result in enumerate(sparse_results, start=1):
+        doc_id = result["id"]
+        rrf_scores[doc_id] = rrf_scores.get(doc_id, 0) + (1.0 / (k + rank))
+    
+    # Merge results with RRF scores
+    all_results = {}
+    for result in dense_results + sparse_results:
+        doc_id = result["id"]
+        if doc_id not in all_results:
+            all_results[doc_id] = result.copy()
+            all_results[doc_id]["rrf_score"] = rrf_scores[doc_id]
+            all_results[doc_id]["original_score"] = result.get("score")
+    
+    # Sort by RRF score (descending)
+    fused = sorted(
+        all_results.values(),
+        key=lambda x: x["rrf_score"],
+        reverse=True
+    )
+    
+    # Use RRF score as the main score
+    for result in fused:
+        result["score"] = result["rrf_score"]
+    
+    return fused
 
 
 # ==========================================
@@ -174,11 +232,9 @@ def retrieve_text_chunks(
     top_k: int = 5,
 ) -> List[Dict]:
     """
-    Adaptive search strategy:
-    - Entity queries (names, acronyms) → sparse-only for precision
-    - Concept queries (topics, questions) → hybrid (dense + sparse) for power
-    
-    Best overall performance for diverse query types.
+    Simple hybrid search optimized for multimodal consistency.
+    Uses dense vectors with optional sparse boost when available.
+    Returns cosine scores (0.2-0.7) consistent with image/audio retrieval.
     """
     if not query.strip():
         return []
@@ -195,63 +251,29 @@ def retrieve_text_chunks(
         ]
     )
 
-    entity_query = is_named_entity_query(query)
-
-    # -------------------------------
-    # 🔤 ENTITY SEARCH (sparse-only for precision)
-    # -------------------------------
-    if entity_query and tfidf.is_fitted():
+    dense_vec = embedder.embed_query(query)
+    
+    # Use sparse boost if TF-IDF is fitted, otherwise pure dense
+    if tfidf.is_fitted():
         sparse_vec_dict = tfidf.encode(query)
-        
         sparse_vec = SparseVector(
             indices=sparse_vec_dict["indices"],
             values=sparse_vec_dict["values"]
         )
-
-        result = client.query_points(
-            collection_name=COLLECTION,
-            query=sparse_vec,
-            using="sparse",
-            query_filter=owner_filter,
-            limit=top_k,
-            with_payload=True,
-            with_vectors=False,
-        )
-
-        MIN_SCORE = 0.08  # Lower threshold for TF-IDF
-        hits = []
-        for r in result.points:
-            hits.append({
-                "id": r.id,
-                "score": float(r.score),
-                "text": r.payload.get("text"),
-                "metadata": r.payload,
-            })
-
-    # -------------------------------
-    # 🧠 CONCEPT SEARCH (hybrid for best results)
-    # -------------------------------
-    elif tfidf.is_fitted():
-        dense_vec = embedder.embed_query(query)
-        sparse_vec_dict = tfidf.encode(query)
         
-        sparse_vec = SparseVector(
-            indices=sparse_vec_dict["indices"],
-            values=sparse_vec_dict["values"]
-        )
-
+        # Hybrid search with Qdrant's built-in fusion
         result = client.query_points(
             collection_name=COLLECTION,
             prefetch=[
                 Prefetch(
                     query=dense_vec,
                     using="dense",
-                    limit=50,
+                    limit=top_k * 2,
                 ),
                 Prefetch(
                     query=sparse_vec,
                     using="sparse",
-                    limit=50,
+                    limit=top_k * 2,
                 ),
             ],
             query=dense_vec,
@@ -261,24 +283,8 @@ def retrieve_text_chunks(
             with_payload=True,
             with_vectors=False,
         )
-
-        MIN_SCORE = 0.30 if len(query.split()) <= 2 else 0.38
-        hits = []
-        for point in result.points:
-            score = _normalize_score(point.score)
-            hits.append({
-                "id": point.id,
-                "score": score,
-                "text": point.payload.get("text"),
-                "metadata": point.payload,
-            })
-
-    # -------------------------------
-    # 🔵 DENSE-ONLY FALLBACK (before TF-IDF bootstrap)
-    # -------------------------------
     else:
-        dense_vec = embedder.embed_query(query)
-        
+        # Dense-only fallback
         result = client.query_points(
             collection_name=COLLECTION,
             query=dense_vec,
@@ -289,20 +295,20 @@ def retrieve_text_chunks(
             with_vectors=False,
         )
 
-        MIN_SCORE = 0.30 if len(query.split()) <= 2 else 0.38
-        hits = []
-        for point in result.points:
-            score = _normalize_score(point.score)
-            hits.append({
-                "id": point.id,
-                "score": score,
-                "text": point.payload.get("text"),
-                "metadata": point.payload,
-            })
+    hits = []
+    for point in result.points:
+        score = _normalize_score(point.score)
+        hits.append({
+            "id": point.id,
+            "score": score,
+            "text": point.payload.get("text"),
+            "metadata": point.payload,
+        })
 
-    # -------------------------------
-    # 🎯 Score filtering with fallback
-    # -------------------------------
+    # Relaxed thresholds - consistent with image/audio retrieval
+    # Shorter queries naturally have lower scores
+    MIN_SCORE = 0.25 if len(query.split()) <= 2 else 0.28
+    
     filtered = [h for h in hits if h["score"] is None or h["score"] >= MIN_SCORE]
     return filtered or hits
 

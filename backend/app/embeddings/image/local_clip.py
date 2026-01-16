@@ -16,8 +16,15 @@ def _load():
             _model = CLIPModel.from_pretrained(settings.CLIP_MODEL_PATH, local_files_only=True)
             _processor = CLIPProcessor.from_pretrained(settings.CLIP_MODEL_PATH, local_files_only=True)
         else:
-            _model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
-            _processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+            # Use central cache dir for HF downloads; it won't redownload if present
+            _model = CLIPModel.from_pretrained(
+                "openai/clip-vit-base-patch32",
+                cache_dir=settings.MODEL_CACHE_DIR
+            )
+            _processor = CLIPProcessor.from_pretrained(
+                "openai/clip-vit-base-patch32",
+                cache_dir=settings.MODEL_CACHE_DIR
+            )
         _model.eval()
     
 def embed_image_local(image_url:str)-> list[float]:

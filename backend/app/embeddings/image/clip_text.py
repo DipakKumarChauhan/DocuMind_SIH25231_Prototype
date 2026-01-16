@@ -13,8 +13,15 @@ def _load():
             _model = CLIPModel.from_pretrained(settings.CLIP_MODEL_PATH, local_files_only=True)
             _processor = CLIPProcessor.from_pretrained(settings.CLIP_MODEL_PATH, local_files_only=True)
         else:
-            _model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
-            _processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
+            # Use central cache dir; HF will reuse local files when present
+            _model = CLIPModel.from_pretrained(
+                "openai/clip-vit-base-patch32",
+                cache_dir=settings.MODEL_CACHE_DIR
+            )
+            _processor = CLIPProcessor.from_pretrained(
+                "openai/clip-vit-base-patch32",
+                cache_dir=settings.MODEL_CACHE_DIR
+            )
         _model.eval()
 
 def embed_text_clip(text: str) -> list[float]:

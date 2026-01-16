@@ -45,6 +45,8 @@ google-cloud-vision==3.4.4
 
 
 # Transformers & ML
-transformers==4.36.2
-torch==2.1.2
+transformers>=4.44.2
+torch>=2.2.0
 Pillow==10.1.0
+openai-whisper
+sentence-transformers>=2.2.0

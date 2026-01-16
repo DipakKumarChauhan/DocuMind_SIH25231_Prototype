@@ -1,7 +1,6 @@
 """
 Local BGE-m3 embedding model implementation using sentence-transformers.
-This module provides embeddings using the local BGE-m3 model.
-Replaces the previous HuggingFace API-based implementation.
+This module provides a local alternative to HuggingFace API-based embeddings.
 """
 
 import os
@@ -9,10 +8,9 @@ import math
 from typing import List
 from sentence_transformers import SentenceTransformer
 from app.embeddings.base import EmbeddingModel
-from app.config import settings
 
 
-class HFBgeM3Embedder(EmbeddingModel):
+class LocalBgeM3Embedder(EmbeddingModel):
     """
     Local BGE-m3 embedder using sentence-transformers.
     
@@ -36,11 +34,11 @@ class HFBgeM3Embedder(EmbeddingModel):
         
         Args:
             cache_folder: Optional folder to cache model weights. 
-                         Defaults to /home/dipak/SIH-25321_MVP/model_cache/
+                         Defaults to ~/.cache/huggingface/hub/
             device: Device to run model on ("cpu", "cuda", "mps", etc.)
         """
         self.device = device
-        self.cache_folder = cache_folder or settings.MODEL_CACHE_DIR
+        self.cache_folder = cache_folder or os.path.expanduser("~/.cache/huggingface/hub/")
         
         # Load the model
         try:
@@ -144,7 +142,7 @@ _embedder_instance = None
 def get_local_bge_m3_embedder(
     cache_folder: str = None,
     device: str = "cpu"
-) -> HFBgeM3Embedder:
+) -> LocalBgeM3Embedder:
     """
     Get or create a local BGE-m3 embedder instance.
     
@@ -153,15 +151,14 @@ def get_local_bge_m3_embedder(
         device: Device to run model on
         
     Returns:
-        HFBgeM3Embedder instance
+        LocalBgeM3Embedder instance
     """
     global _embedder_instance
     
     if _embedder_instance is None:
-        _embedder_instance = HFBgeM3Embedder(
+        _embedder_instance = LocalBgeM3Embedder(
             cache_folder=cache_folder,
             device=device
         )
     
     return _embedder_instance
-
