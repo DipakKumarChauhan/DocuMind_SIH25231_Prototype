@@ -46,6 +46,16 @@ def google_login(id_token_str:str, db:Session = Depends(get_db)):
 
     user = db.query(User).filter(User.google_sub == sub).first() # Check if user exists in the db by using unique sub given by google
 
+    print(f"[DEBUG AUTH] Email: {email}, Google Sub: {sub}")
+    
+    # Check for all users with this email
+    all_users_with_email = db.query(User).filter(User.email == email).all()
+    print(f"[DEBUG AUTH] Total users with this email: {len(all_users_with_email)}")
+    for u in all_users_with_email:
+        print(f"  - ID: {u.id}, google_sub: {u.google_sub}")
+    
+    print(f"[DEBUG AUTH] Existing user found by google_sub: {user}")
+    
     if not user:
         # create a new user if it doesnot exists
 
@@ -53,6 +63,9 @@ def google_login(id_token_str:str, db:Session = Depends(get_db)):
         db.add(user)
         db.commit()
         db.refresh(user)
+        print(f"[DEBUG AUTH] New user created with ID: {user.id}")
+    else:
+        print(f"[DEBUG AUTH] Existing user retrieved with ID: {user.id}")
 
     # Create JWT token for the user
     token = create_access_token({"sub":user.id})

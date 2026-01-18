@@ -35,7 +35,16 @@ def retrieve_text_from_audio(
         with_payload= True,
         )
     
-    return [
+    # Prepend the transcript itself as first context item
+    transcript_item = {
+        "text": transcript,
+        "filename": "[Uploaded Audio]",
+        "page": None,
+        "score": 1.0,
+        "timestamps": result.get("segments", []) if isinstance(result, dict) else []
+    }
+    
+    db_results = [
         {
             "text": p.payload["text"],
             "filename": p.payload["filename"],
@@ -44,5 +53,7 @@ def retrieve_text_from_audio(
         }
         for p in result.points
     ]
+    
+    return [transcript_item] + db_results
 
 

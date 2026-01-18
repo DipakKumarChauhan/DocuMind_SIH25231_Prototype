@@ -98,4 +98,15 @@ def retrieve_text_from_image(
         })
 
     reranked.sort(key=lambda x: x["combined_score"], reverse=True)
-    return reranked[:top_k]
+    
+    # Prepend the OCR text itself as first context item
+    ocr_item = {
+        "text": ocr_text,
+        "filename": "[Uploaded Image]",
+        "page": None,
+        "score": 1.0,
+        "combined_score": 1.0,
+        "source": "image_ocr"
+    }
+    
+    return [ocr_item] + reranked[:top_k]

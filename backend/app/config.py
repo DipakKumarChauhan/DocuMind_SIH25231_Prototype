@@ -53,3 +53,7 @@ os.environ.setdefault("HF_HUB_CACHE", settings.MODEL_CACHE_DIR)
 
 # Some libraries respect XDG cache; set it as well
 os.environ.setdefault("XDG_CACHE_HOME", settings.MODEL_CACHE_DIR)
+
+# Force offline mode to use cached models only (prevents network timeouts)
+os.environ.setdefault("HF_HUB_OFFLINE", "1")
+os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
