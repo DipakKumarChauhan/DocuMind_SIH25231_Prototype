@@ -3,21 +3,11 @@ from app.utils.cloudinary_audio import upload_audio
 from app.auth.dependencies import get_current_user
 from app.asr.orchestrator import transcribe_audio
 from app.ingestion.audio_indexer import index_audio
+from app.utils.upload_validation import validate_audio_upload
 import uuid 
 from datetime import datetime
 
 router =  APIRouter(prefix = "/api/audio",tags = ["Upload Audio"])
-
-MAX_AUDIO_SIZE = 100 * 1024 * 1024  # 100 MB
-
-ALLOWED_AUDIO_TYPES = {
-    "audio/mpeg",
-    "audio/wav",
-    "audio/mp4",
-    "audio/webm",
-    "video/mp4",  # MP4 files are often uploaded with video MIME type
-    "video/webm",
-}
 
 # Implementation 3: Background processing helper
 def process_audio_background(audio_url: str, owner_id: str, file_id: str):
@@ -44,15 +34,36 @@ async def upload_audio_file(
     file: UploadFile = File(...),
     user = Depends(get_current_user)
 ):
-    if file.content_type not in ALLOWED_AUDIO_TYPES:
-        raise HTTPException(status_code=400, detail="Unsupported audio type.")
+    """
+    Upload and index an audio file.
     
+    Validates:
+    - File type (MP3, WAV, MP4, WEBM, etc.)
+    - File size (max 100 MB)
+    - File not empty
+    - Minimum file size (10 KB)
+    
+    Then:
+    - Transcribes audio (background task)
+    - Indexes transcript into Qdrant
+    
+    Args:
+        background_tasks: FastAPI background task handler
+        file: Audio file to upload
+        user: Authenticated user
+        
+    Returns:
+        dict: File metadata and processing status
+        
+    Raises:
+        HTTPException 400: Invalid/empty file
+        HTTPException 413: File too large
+        HTTPException 415: Invalid MIME type
+    """
     audio_bytes = await file.read()
-    if not audio_bytes:
-        raise HTTPException(status_code=400, detail="Empty audio file.")
     
-    if len(audio_bytes) > MAX_AUDIO_SIZE:
-        raise HTTPException(status_code=400, detail="Audio file exceeds maximum size limit.")
+    # Validate upload
+    validation = validate_audio_upload(audio_bytes, file.content_type, file.filename)
     
     audio_url = upload_audio(
         file_bytes=audio_bytes,

@@ -4,20 +4,40 @@ from uuid import uuid4
 from app.utils.cloudinary import upload_image
 from app.auth.dependencies  import get_current_user 
 from app.ingestion.image_indexer import index_image
+from app.utils.upload_validation import validate_image_upload
+
 router = APIRouter(prefix="/api/upload",tags=["upload"])
 
-ALLOWED_IMAGE_TYPES = ["image/jpeg","image/png","image/gif","image/webp"]
-
 @router.post("/image")
-
 async def upload_image_api(
     file:UploadFile = File(...),
     current_user= Depends(get_current_user) 
 ):
-    if file.content_type not in ALLOWED_IMAGE_TYPES:
-        raise HTTPException(status_code=400,detail="Invalid image type")
-
+    """
+    Upload and index an image file.
+    
+    Validates:
+    - File type (JPEG, PNG, GIF, WEBP)
+    - File size (max 50 MB)
+    - File not empty
+    - Minimum file size (1 KB)
+    
+    Args:
+        file: Image file to upload
+        current_user: Authenticated user
+        
+    Returns:
+        dict: File metadata and URL
+        
+    Raises:
+        HTTPException 400: Invalid file
+        HTTPException 413: File too large
+        HTTPException 415: Invalid MIME type
+    """
     file_bytes = await file.read()
+    
+    # Validate upload
+    validation = validate_image_upload(file_bytes, file.content_type, file.filename)
 
     file_id = str(uuid4())
     public_id =  f"{current_user.id}/{file_id}" 

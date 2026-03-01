@@ -17,6 +17,7 @@ from app.api.search_image import router as search_image_router
 from app.api.upload_audio import router as upload_audio_router
 from app.api.search_audio import router as search_audio_router
 from app.api.chat import router as chat_router
+from app.api.citations import router as citations_router
 ########################################################
 from app.db.session import engine
 from app.db.base import Base
@@ -48,7 +49,7 @@ app.include_router(search_image_router)
 app.include_router(upload_audio_router)
 app.include_router(search_audio_router)
 app.include_router(chat_router)
-# app.include_router(search_image_router)
+app.include_router(citations_router)
 
 #################### Startup Event ####################
 

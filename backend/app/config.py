@@ -33,6 +33,18 @@ class Settings:
     IMAGE_EMBEDDING_API_URL: str = os.getenv("IMAGE_EMBEDDING_API_URL")
     IMAGE_EMBEDDING_API_KEY: str = os.getenv("IMAGE_EMBEDDING_API_KEY")
 
+    # ============================================================
+    # LOGGING FLAGS (for demo debugging)
+    # ============================================================
+    # Enable detailed retrieval logs (which retrievers ran, results count)
+    LOG_RETRIEVAL: bool = os.getenv("LOG_RETRIEVAL", "false").lower() == "true"
+    
+    # Enable context size logging (how much context was built)
+    LOG_CONTEXT_SIZE: bool = os.getenv("LOG_CONTEXT_SIZE", "false").lower() == "true"
+    
+    # Enable latency profiling (how long each step took)
+    LOG_LATENCY: bool = os.getenv("LOG_LATENCY", "false").lower() == "true"
+
     class Config:
         env_file = ".env"
         case_sensitive = True

@@ -1,0 +1,7 @@
+Run this Command in Terminal and Use chat ask a query and get logs.
+
+LOG_RETRIEVAL=true uvicorn app.main:app --reload
+LOG_CONTEXT_SIZE=true uvicorn app.main:app --reload
+LOG_LATENCY=true uvicorn app.main:app --reload
+LOG_LATENCY=true uvicorn app.main:app --reload
+LOG_RETRIEVAL=true LOG_CONTEXT_SIZE=true LOG_LATENCY=true uvicorn app.main:app --reload
